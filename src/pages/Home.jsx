@@ -36,9 +36,15 @@ function Home() {
           Descubra o destino perfeito com a ajuda do Planner.
         </p>
         <Link to="/form">
+        <div className="space-x-4">
           <button className="bg-[#347355] text-white py-3 px-6 rounded-lg shadow-lg hover:bg-[#60BF81] transition">
             Planejar Viagem
           </button>
+          <button className="bg-[#347355] text-white py-3 px-6 rounded-lg shadow-lg hover:bg-[#60BF81] transition">
+            Destino Surpresa
+          </button>
+        </div>
+          
         </Link>
       </div>
     </section>
