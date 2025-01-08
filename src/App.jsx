@@ -9,7 +9,7 @@ import UserArea from "./pages/UserArea";
 import Products from "./pages/Products";
 import Blog from "./pages/Blog";
 import Admin from "./pages/Admin";
-import QuemSouEu from "./pages/QuemSouEu";
+import SobreMim from "./pages/SobreMim";
 
 function App() {
   return (
@@ -18,7 +18,7 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/quem-sou-eu" element={<QuemSouEu />} />
+          <Route path="/sobre-mim" element={<SobreMim />} />
           <Route path="/form" element={<Form />} />
           <Route path="/user" element={<UserArea />} />
           <Route path="/products" element={<Products />} />

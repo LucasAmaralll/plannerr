@@ -1,3 +1,14 @@
+/* src/styles/globals.css */
+
+/* Remover barra de rolagem */
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow-x: hidden; /* Impede rolagem horizontal */
+  overflow-y: auto;   /* Permite rolagem vertical apenas quando necessário */
+}
+
+/* Importando Tailwind CSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

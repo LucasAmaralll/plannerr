@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 
 function Header() {
   return (
-    <header className="bg-blue-600 text-white">
+    <header className="bg-[#223240] text-white py-4">
       <nav className="container mx-auto flex justify-between items-center py-4 px-6">
-        <h1 className="text-2xl font-bold">Planner</h1>
+      <h1 className="text-2xl font-bold">
+        <Link to="/" className="hover:underline">Planner</Link>
+      </h1>
         <ul className="flex space-x-6">
           <li><Link to="/" className="hover:underline">Home</Link></li>
           <li><Link to="/form" className="hover:underline">Formulário</Link></li>
