@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaPlane, FaCar, FaBus, FaShip } from "react-icons/fa"; // Ícones para os meios de transporte
+import emailjs from "emailjs-com"; // Importe a biblioteca EmailJS
 
 function Form() {
   const [step, setStep] = useState(1);
@@ -11,41 +12,67 @@ function Form() {
     temTransporteDefinido: false,
     temHospedagemDefinida: false,
     orcamento: "",
+    nomeCompleto: "",
+    quantidadePessoas: 1,
+    idadePrincipal: "",
+    idadeAcompanhante: "",
+    nomeAcompanhante: "",
+    documentos: [], // Agora é um array para permitir mais de 1 documento
+    locomoção: "", // Para o step de locomoção
   });
 
-  const destinosSugestao = ["Canadá", "Cabo Frio", "Capadócia", "Copenhagen", "Cairns"];
+  const paisesEcidades = {
+    "Brasil": ["Rio de Janeiro", "São Paulo", "Belo Horizonte"],
+    "Canadá": ["Toronto", "Vancouver", "Montreal"],
+    "EUA": ["Nova York", "Los Angeles", "Miami"],
+  }; // Exemplo de países e cidades
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleCheckboxChange = (e) => {
-    const { value } = e.target;
-    setFormData((prevState) => {
-      const newTransporte = prevState.transporte.includes(value)
-        ? prevState.transporte.filter((item) => item !== value)
-        : [...prevState.transporte, value];
-      return { ...prevState, transporte: newTransporte };
-    });
+  const handleFileChange = (e) => {
+    const { files } = e.target;
+    setFormData({ ...formData, documentos: [...formData.documentos, ...files] }); // Adiciona arquivos ao array
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-    const response = await fetch("http://localhost:5000/api/enviar-formulario", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-        });
-      if (response.ok) {
-        alert("Formulário enviado com sucesso!");
-      }
-    } catch (error) {
-      alert("Erro ao enviar o formulário.");
+
+    if (formData.documentos.length === 0) {
+      alert("Por favor, anexe ao menos um documento.");
+      return;
     }
+
+    const templateParams = {
+      destino: formData.destino,
+      transporte: formData.transporte.join(", "),
+      data: formData.data,
+      meioDeHospedagem: formData.meioDeHospedagem,
+      orcamento: formData.orcamento,
+      temHospedagemDefinida: formData.temHospedagemDefinida ? "Sim" : "Não",
+      temTransporteDefinido: formData.temTransporteDefinido ? "Sim" : "Não",
+      nomeCompleto: formData.nomeCompleto,
+      quantidadePessoas: formData.quantidadePessoas,
+      idadePrincipal: formData.idadePrincipal,
+      nomeAcompanhante: formData.nomeAcompanhante,
+      idadeAcompanhante: formData.idadeAcompanhante,
+      documentos: formData.documentos.map((doc) => doc.name).join(", "),
+    };
+
+    emailjs
+      .send("service_d2rcxe6", "template_tj3vmce", templateParams, "YFfYgvI750pHBl_iy")
+      .then(
+        (response) => {
+          console.log("E-mail enviado com sucesso", response);
+          alert("Formulário enviado com sucesso!");
+        },
+        (error) => {
+          console.error("Erro ao enviar o e-mail:", error);
+          alert("Erro ao enviar o formulário.");
+        }
+      );
   };
 
   const goBack = () => {
@@ -53,6 +80,18 @@ function Form() {
       window.location.href = "/"; // Redireciona para a página inicial
     } else {
       setStep(step - 1); // Volta para o step anterior
+    }
+  };
+
+  const handleQuantidadePessoasChange = (e) => {
+    const quantidade = parseInt(e.target.value, 10);
+    setFormData({
+      ...formData,
+      quantidadePessoas: quantidade,
+    });
+    // Abrir ou fechar os steps dos acompanhantes
+    if (quantidade > 1) {
+      setStep(3); // Avançar para o step de acompanhantes se houver mais de 1 pessoa
     }
   };
 
@@ -64,28 +103,125 @@ function Form() {
         <form onSubmit={handleSubmit}>
           {step === 1 && (
             <div>
-              <label className="block mb-2 text-[#223240]">Destino:</label>
-              <input
-                type="text"
-                name="destino"
-                value={formData.destino}
+              <label className="block mt-4 mb-2 text-[#223240]">País:</label>
+              <select
+                name="pais"
+                value={formData.pais}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-lg"
-                placeholder="Exemplo: Canadá"
-                list="destinos"
                 required
-              />
-              <datalist id="destinos">
-                {destinosSugestao
-                  .filter((destino) => destino.toLowerCase().includes(formData.destino.toLowerCase()))
-                  .map((destino, index) => (
-                    <option key={index} value={destino} />
-                  ))}
-              </datalist>
+              >
+                <option value="">Selecione o país</option>
+                {Object.keys(paisesEcidades).map((pais, index) => (
+                  <option key={index} value={pais}>
+                    {pais}
+                  </option>
+                ))}
+              </select>
+
+              {formData.pais && (
+                <>
+                  <label className="block mt-4 mb-2 text-[#223240]">Cidade:</label>
+                  <select
+                    name="cidade"
+                    value={formData.cidade}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-lg"
+                    required
+                  >
+                    <option value="">Selecione a cidade</option>
+                    {paisesEcidades[formData.pais].map((cidade, index) => (
+                      <option key={index} value={cidade}>
+                        {cidade}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
             </div>
           )}
 
           {step === 2 && (
+            <div>
+              <label className="block mb-2 text-[#223240]">Nome Completo:</label>
+              <input
+                type="text"
+                name="nomeCompleto"
+                value={formData.nomeCompleto}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-lg"
+                required
+              />
+              <label className="block mt-4 mb-2 text-[#223240]">Quantas pessoas irão com você na viagem?</label>
+              <input
+                type="number"
+                name="quantidadePessoas"
+                value={formData.quantidadePessoas}
+                onChange={handleQuantidadePessoasChange}
+                className="w-full p-2 border rounded-lg"
+                min="1"
+                required
+              />
+            </div>
+          )}
+
+          {step === 3 && formData.quantidadePessoas > 1 && (
+            <div>
+              <h3 className="text-xl text-[#223240] mb-4">Acompanhantes:</h3>
+              {Array.from({ length: formData.quantidadePessoas - 1 }, (_, index) => (
+                <div key={index}>
+                  <label className="block mt-4 mb-2 text-[#223240]">Nome do Acompanhante {index + 1}:</label>
+                  <input
+                    type="text"
+                    name={`nomeAcompanhante${index}`}
+                    value={formData[`nomeAcompanhante${index}`]}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-lg"
+                  />
+                  <label className="block mt-4 mb-2 text-[#223240]">Idade do Acompanhante {index + 1}:</label>
+                  <input
+                    type="number"
+                    name={`idadeAcompanhante${index}`}
+                    value={formData[`idadeAcompanhante${index}`]}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded-lg"
+                    min="0"
+                  />
+                </div>
+              ))}
+            </div>
+          )} : (
+
+          {step === 4 && (
+            <div>
+              <label className="block mb-2 text-[#223240]">Anexar documentos (Passaporte, Carteira de Identidade):</label>
+              <input
+                type="file"
+                name="documentos"
+                onChange={handleFileChange}
+                className="w-full p-2 border rounded-lg"
+                accept=".pdf"
+                multiple
+                required
+              />
+            </div>
+          )})
+
+          {step === 5 && (
+            <div>
+              <label className="block mb-2 text-[#223240]">Data da Viagem:</label>
+              <input
+                type="date"
+                name="data"
+                value={formData.data}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-lg"
+                required
+              />
+            </div>
+          )}
+
+        {step === 6 && (
             <div>
               <label className="block mb-2 text-[#223240]">Já tem um meio de locomoção definido?</label>
               <div className="flex space-x-4 mb-4">
@@ -96,7 +232,7 @@ function Form() {
                     value="sim"
                     onChange={() => {
                       setFormData({ ...formData, temTransporteDefinido: true });
-                      setStep(4); // Pular para a próxima etapa
+                      setStep(8); // Pular para a próxima etapa
                     }}
                   />
                   <span className="ml-2">Sim</span>
@@ -114,44 +250,51 @@ function Form() {
             </div>
           )}
 
-          {step === 3 && !formData.temTransporteDefinido && (
+        {step === 7 && !formData.temTransporteDefinido && (
             <div>
               <label className="block mb-2 text-[#223240]">Escolha os meios de transporte:</label>
               <div className="grid grid-cols-2 gap-4">
-                {["avião", "carro", "onibus", "navio"].map((transporte) => (
-                  <label key={transporte} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      value={transporte}
-                      onChange={handleCheckboxChange}
-                      className="mr-2"
-                    />
-                    {transporte === "avião" && <FaPlane />}
-                    {transporte === "carro" && <FaCar />}
-                    {transporte === "onibus" && <FaBus />}
-                    {transporte === "navio" && <FaShip />}
-                    {transporte.charAt(0).toUpperCase() + transporte.slice(1)}
-                  </label>
-                ))}
+              <label className="flex items-center"> 
+                  <input
+                    type="radio"
+                    name="meiodeTransporte"
+                    value="avião"
+                    onChange={handleInputChange}
+                  />
+                  <span className="ml-2">Avião .</span> <FaPlane />
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="meiodeTransporte"
+                    value="carro"
+                    onChange={handleInputChange}
+                  />
+                  <span className="ml-2">Carro .</span> <FaCar />
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="meiodeTransporte"
+                    value="onibus"
+                    onChange={handleInputChange}
+                  />
+                  <span className="ml-2">Ônibus .</span> <FaBus />
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="meiodeTransporte"
+                    value="navio"
+                    onChange={handleInputChange}
+                  />
+                  <span className="ml-2">Navio .</span> <FaShip />
+                </label>
               </div>
             </div>
           )}
 
-          {step === 4 && (
-            <div>
-              <label className="block mb-2 text-[#223240]">Data da Viagem:</label>
-              <input
-                type="date"
-                name="data"
-                value={formData.data}
-                onChange={handleInputChange}
-                className="w-full p-2 border rounded-lg"
-                required
-              />
-            </div>
-          )}
-
-          {step === 5 && (
+          {step === 8 && (
             <div>
               <label className="block mb-2 text-[#223240]">Tem hospedagem definida?</label>
               <div className="flex space-x-4 mb-4">
@@ -162,7 +305,7 @@ function Form() {
                     value="sim"
                     onChange={() => {
                       setFormData({ ...formData, temHospedagemDefinida: true });
-                      setStep(6); // Pular para a próxima etapa
+                      setStep(10); // Avança para o próximo passo ao escolher "Sim"
                     }}
                   />
                   <span className="ml-2">Sim</span>
@@ -180,7 +323,7 @@ function Form() {
             </div>
           )}
 
-          {step === 6 && !formData.temHospedagemDefinida && (
+          {step === 9 && !formData.temHospedagemDefinida && (
             <div>
               <label className="block mb-2 text-[#223240]">Onde prefere se hospedar?</label>
               <div className="flex space-x-4 mb-4">
@@ -224,7 +367,7 @@ function Form() {
               Voltar
             </button>
 
-            {step === 6 ? (
+            {step === 10 ? (
               <button type="submit" className="bg-[#347355] text-white py-2 px-4 rounded-lg hover:bg-[#60BF81]">
                 Enviar
               </button>
