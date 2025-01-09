@@ -375,7 +375,6 @@ function Form() {
           )}
 
           <div className="flex justify-between mt-4">
-            {step > 1 && (
               <button
                 type="button"
                 onClick={goBack}
@@ -383,7 +382,6 @@ function Form() {
               >
                 Voltar
               </button>
-            )}
 
             {step < 10 && (
                 <button
